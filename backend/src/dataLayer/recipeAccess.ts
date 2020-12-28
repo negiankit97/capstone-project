@@ -15,7 +15,7 @@ const url_expiration = process.env.SIGNED_URL_EXPIRATION;
 export class RecipeAccess {
   constructor(
       private docClient: DocumentClient = new AWS.DynamoDB.DocumentClient(),
-      private tableName: string = process.env.TABLE_NAME,
+      private tableName: string = process.env.RECIPES_TABLE,
       private s3Bucket: string = process.env.IMAGES_S3_BUCKET
       ) {}
 
@@ -41,7 +41,7 @@ export class RecipeAccess {
         Item: item
     }).promise();
 
-    return item.id;
+    return item.recipeId;
   }
 
   async updateRecipe(userId: string,id: string,item: UpdateRecipeItem) {

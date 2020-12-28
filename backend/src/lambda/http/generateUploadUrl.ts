@@ -6,7 +6,7 @@ export const handler: APIGatewayProxyHandler =  async (event: APIGatewayProxyEve
 
     console.log('Processing event: ', event);
 
-    const recipeId = event.pathParameters.id;
+    const recipeId = event.pathParameters.recipeId;
 
     const userId = getUserId(event);
 

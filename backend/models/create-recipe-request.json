@@ -1,6 +1,7 @@
 {
-    "$schema": "http://json-schema.org/draft-04/schema",
-    "name": "recipes",
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "recipe",
+    "type":"object",
     "properties": {
         "name":{
             "type": "string",
@@ -14,7 +15,6 @@
             "minimum": 1
         }
     },
-    "type":"object",
     "required":[
         "name",
         "description",

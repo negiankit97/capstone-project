@@ -1,5 +1,5 @@
 export interface RecipeItem {
-    id: string,
+    recipeId: string,
     userId: string,
     name: string,
     description: string,

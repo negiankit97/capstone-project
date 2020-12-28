@@ -17,7 +17,7 @@ provider:
     lambda: true
     apiGateway: true
 
-  stage: ${opt:stage, 'dev'},
+  stage: ${opt:stage, 'dev'}
   region: ${opt:region, 'us-east-1'}
   environment:
     RECIPES_TABLE: Recipes-${self:provider.stage}
@@ -52,20 +52,20 @@ functions:
         Action:
           - dynamodb:Query
           - dynamodb:GetItem
-        Resources: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:Query
           - dynamodb:GetItem
-        Resources: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}/index/${self:provider.environment.RECIPES_INDEX_NAME}
-        - Effect: Allow
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}/index/${self:provider.environment.RECIPES_INDEX_NAME}
+      - Effect: Allow
         Action:
           - "xray:PutTraceSegments"
           - "xray:PutTelemetryRecords"
         Resource:
           - "*"
 
-  CreateRecipes:
+  CreateRecipe:
     handler: src/lambda/http/createRecipe.handler
     events:
       - http:
@@ -73,9 +73,9 @@ functions:
           cors: true
           path: recipes
           authorizer: Auth
-          reqValidator: ReqValidatorBody
+          reqValidatorName: RequestBodyValidator 
           documentation:
-            summary: Create Recipes
+            summary: Create a recipe
             description: Create a new recipe
             requestModels:
               'application/json': CreateRecipeRequest
@@ -83,11 +83,11 @@ functions:
       - Effect: Allow
         Action:
           - dynamodb:PutItem
-        Resources: arn:aws:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:PutItem
-        Resources: arn:aws:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}/index/${self:provider.environment.RECIPES_INDEX_NAME}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}/index/${self:provider.environment.RECIPES_INDEX_NAME}
       - Effect: Allow
         Action:
           - "xray:PutTraceSegments"
@@ -100,7 +100,7 @@ functions:
     events:
       - http:
           method: patch
-          path: recipes/{id}
+          path: recipes/{recipeId}
           cors: true
           authorizer: Auth
     iamRoleStatements:
@@ -108,12 +108,12 @@ functions:
         Action:
           - dynamodb:PutItem
           - dynamodb:UpdateItem
-        Resources: arn:aws:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}
       - Effect: Allow
         Action:
           - dynamodb:PutItem
           - dynamodb:UpdateItem
-        Resources: arn:aws:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}/index/${self.provider.environment.RECIPES_INDEX_NAME}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}/index/${self:provider.environment.RECIPES_INDEX_NAME}
       - Effect: Allow
         Action:
           - "xray:PutTraceSegments"
@@ -126,18 +126,14 @@ functions:
     events:
       - http:
           method: delete
-          path: recipes/{id}
+          path: recipes/{recipeId}
           cors: true
           authorizer: Auth
     iamRoleStatements:
       - Effect: Allow
-        Action: 
+        Action:
           - dynamodb:DeleteItem
-        Resources: arn:aws:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}
-      - Effect: Allow
-        Action: 
-          - dynamodb:DeleteItem
-        Resources: arn:aws:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}/index/${self:provider.environment.RECIPES_INDEX_NAME}
+        Resource: arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.RECIPES_TABLE}
       - Effect: Allow
         Action:
           - "xray:PutTraceSegments"
@@ -149,7 +145,7 @@ functions:
     events:
       - http:
           method: post
-          path: recipes/{id}/attachment
+          path: recipes/{recipeId}/attachment
           cors: true
           authorizer: Auth
     iamRoleStatements:
@@ -175,12 +171,12 @@ resources:
     RequestBodyValidator:
       Type: AWS::ApiGateway::RequestValidator
       Properties:
-        name: 'request-body-validator'
+        Name: 'request-body-validator'
         RestApiId:
           Ref: ApiGatewayRestApi
-        ValidateRequestBody: true
+        ValidateRequestBody:  true
         ValidateRequestParameters: false
-  
+   
     GatewayResponseDefault4XX:
       Type: AWS::ApiGateway::GatewayResponse
       Properties:
@@ -196,7 +192,7 @@ resources:
       Type: AWS::DynamoDB::Table
       Properties:
         AttributeDefinitions:
-          - AttributeName: id 
+          - AttributeName: recipeId 
             AttributeType: S
           - AttributeName: createdAt
             AttributeType: S
@@ -205,7 +201,7 @@ resources:
         KeySchema:
           - AttributeName: userId
             KeyType: HASH
-          - AttributeName: createdAt
+          - AttributeName: recipeId
             KeyType: RANGE
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:provider.environment.RECIPES_TABLE}
@@ -217,7 +213,7 @@ resources:
               - AttributeName: createdAt
                 KeyType: RANGE
             Projection:
-              ProjectionType: All
+              ProjectionType: ALL
     S3Bucket:
       Type: AWS::S3::Bucket
       Properties:
@@ -225,16 +221,17 @@ resources:
         CorsConfiguration:
           CorsRules:
             - AllowedOrigins:
-                - "*"
+                - '*'
               AllowedHeaders:
-                - "*"
+                - '*'
               AllowedMethods:
                 - GET
-                - POST
                 - PUT
+                - POST
                 - DELETE
                 - HEAD
               MaxAge: 3000
+
     BucketPolicy:
       Type: AWS::S3::BucketPolicy
       Properties:
@@ -247,5 +244,5 @@ resources:
               Principal: '*'
               Action: 's3:GetObject'
               Resource: 'arn:aws:s3:::${self:provider.environment.IMAGES_S3_BUCKET}/*'
-        Bucket: !Ref S3Bucket   
+        Bucket: !Ref S3Bucket  
 

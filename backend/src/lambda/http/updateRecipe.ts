@@ -15,7 +15,7 @@ export const handler: APIGatewayProxyHandler = async (
 
   const item: UpdateRecipeRequest = JSON.parse(event.body);
 
-  const id = event.pathParameters.id;
+  const id = event.pathParameters.recipeId;
 
   const userId = getUserId(event);
 

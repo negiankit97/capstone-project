@@ -14,7 +14,7 @@ export function createRecipe(item: CreateRecipeItem, userId: string){
     const id = uuid.v4();
 
     return recipesAccess.createRecipe({
-        id,
+        recipeId:id,
         name: item.name,
         userId,
         description: item.description,
