@@ -48,15 +48,18 @@ export class RecipeAccess {
       await this.docClient.update({
           TableName: this.tableName,
           Key:{
-              userId,
-              id
+              userId: userId,
+              recipeId: id
           },
-          UpdateExpression: 'set name = :n, description = :d, reviewRating: :r, favourite: :f  ',
+          UpdateExpression: 'set #n = :n, description = :d, reviewRating = :r, favourite = :f  ',
           ExpressionAttributeValues:{
               ':n': item.name,
               ':d': item.description,
               ':r': item.reviewRating,
               ':f': item.favourite
+          },
+          ExpressionAttributeNames:{
+              '#n': 'name'
           },
           ReturnValues: 'UPDATED_NEW'
           
@@ -70,20 +73,21 @@ export class RecipeAccess {
       return await this.docClient.delete({
           TableName: this.tableName,
           Key:{
-              userId,
-              id
+              userId:userId,
+              recipeId: id
           }
       }).promise();
   }
 
-  async generateUploadUrl(userId: string,id: string) {
+  async generateUploadUrl(userId: string, id: string) {
       const url = getUploadUrl(id, this.s3Bucket);
 
-      const attachmentUrl = `https://${this.s3Bucket}.s3.amazonaws.com/${id}`
+      const attachmentUrl:string = 'https://' + this.s3Bucket + '.s3.amazonaws.com/' + id;
       await this.docClient.update({
           TableName: this.tableName,
           Key: {
-              userId
+              userId: userId,
+              recipeId: id
           },
           UpdateExpression: 'set imageUrl = :a',
           ExpressionAttributeValues: {
