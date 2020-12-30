@@ -29,7 +29,7 @@ export const handler: APIGatewayProxyHandler = async (
     },
     body: JSON.stringify({
       recipes,
-      message: "Created Recipe Successfully!",
+      message: "Updated Recipe Successfully!",
     }),
   };
 };
